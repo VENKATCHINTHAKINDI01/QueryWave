@@ -40,6 +40,10 @@ def execute_tool(routing_payload: Dict[str, Any]) -> Dict[str, Any]:
 
     if mode == "arxiv":
         return _execute_arxiv_pipeline(query, routing_payload)
+    
+    if mode == "chat":
+        return _execute_chat_pipeline(query, routing_payload)
+
 
     raise RoutingException(
         message=f"No tool execution defined for mode: {mode}",
@@ -95,28 +99,55 @@ def _execute_document_pipeline(query: str, payload: Dict) -> Dict[str, Any]:
 # Web Pipeline (placeholder)
 # -----------------------------
 
+from app.pipelines.web_rag.web_search import search_web
+
+
 def _execute_web_pipeline(query: str, payload: Dict) -> Dict[str, Any]:
 
+    state = payload.get("state", {})
+
+    logger.info("Web search pipeline invoked")
+
+    # 1️⃣ Get search results
+    search_results = search_web(query, max_results=5)
+
+    if not search_results:
+        raise RoutingException(
+            message="No web results found",
+            error_code="WEB_NO_RESULTS"
+        )
+
+    # 2️⃣ Convert results to chunks format
+    chunks = []
+
+    for idx, result in enumerate(search_results):
+        chunks.append({
+            "source": result["href"],
+            "chunk_id": idx,
+            "text": f"{result['title']}\n\n{result['body']}"
+        })
+
+    # 3️⃣ Build context
     context = build_context(
         user_query=query,
-        chat_history=payload.get("state", {}).get("chat_history", []),
+        chat_history=state.get("chat_history", []),
         retrieval_data={
             "source": "web",
-            "note": "Web search integration coming next"
+            "chunks": chunks
         }
     )
 
+    # 4️⃣ Generate response
+    llm = load_llm("llama3")
     final_answer = generate_response(llm, context)
 
     return {
-        
-    "status": "success",
-    "data": {
-        "answer": final_answer,
-        "sources": []
+        "status": "success",
+        "data": {
+            "answer": final_answer,
+            "sources": chunks
         }
     }
-
 
 # -----------------------------
 # arXiv Pipeline (placeholder)
@@ -172,5 +203,33 @@ def _execute_arxiv_pipeline(query: str, payload: Dict) -> Dict[str, Any]:
         "data": {
             "answer": final_answer,
             "sources": retrieved_chunks
+        }
+    }
+from app.memory.chat_history import ChatHistoryManager
+
+def _execute_chat_pipeline(query: str, payload: Dict) -> Dict[str, Any]:
+
+    logger.info("Normal chat pipeline invoked")
+
+    state = payload.get("state", {})
+
+    # 🔥 Always pull from memory manager
+    memory = ChatHistoryManager(state)
+    chat_history = memory.get_history()
+
+    context = build_context(
+        user_query=query,
+        chat_history=chat_history,
+        retrieval_data=None
+    )
+
+    llm = load_llm("llama3")
+    final_answer = generate_response(llm, context)
+
+    return {
+        "status": "success",
+        "data": {
+            "answer": final_answer,
+            "sources": []
         }
     }

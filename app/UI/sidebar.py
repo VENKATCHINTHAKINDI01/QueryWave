@@ -44,6 +44,7 @@ def render_sidebar():
         # -------------------------------
 
         modes = {
+            "💬 General-Chat": "chat",
             "📄 Document Q&A": "document",
             "🌐 Web Search": "web",
             "📚 Research Papers (arXiv)": "arxiv",

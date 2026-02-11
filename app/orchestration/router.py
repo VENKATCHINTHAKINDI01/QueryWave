@@ -64,6 +64,12 @@ def route_query(user_query: str, state: Dict) -> Dict:
             "metadata": {},
             "state" : state
         }
+    if active_mode == state.get("active_mode", "chat"):
+        return {
+        "mode": active_mode,
+        "query": user_query,
+        "state": state
+    }
 
     # Fallback (should never happen)
     raise RoutingException(

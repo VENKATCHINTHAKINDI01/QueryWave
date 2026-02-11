@@ -201,6 +201,7 @@ with st.sidebar:
     st.markdown("### Mode Selection")
 
     modes = {
+        "💬 General-Chat": "chat",
         "📄 Document Q&A": "document",
         "🌐 Web Search": "web",
         "📚 Research Papers (arXiv)": "arxiv",
@@ -285,8 +286,23 @@ if user_input:
         st.markdown(assistant_response)
 
         if sources:
-            st.markdown("### 📚 Sources")
-            for source in sources:
-                st.markdown(f"- **{source['source']}** (Chunk {source['chunk_id']})")
+
+            with st.expander("🔗 View Sources", expanded=False):
+
+                for idx, source in enumerate(sources):
+
+                    title = source.get("title", "Source")
+                    url = source.get("source") or source.get("href")
+                    snippet = source.get("text", "")
+
+                    st.markdown(f"### {idx+1}. {title}")
+
+                    if url:
+                        st.markdown(f"[Open Source ↗]({url})")
+
+                    if snippet:
+                        st.caption(snippet[:300] + "...")
+            
+                    st.markdown("---")
 
 st.markdown('</div>', unsafe_allow_html=True)
