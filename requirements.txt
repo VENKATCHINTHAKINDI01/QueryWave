@@ -1,0 +1,12 @@
+pyyaml
+streamlit
+pymupdf
+python-docx
+langchain
+langchain_groq
+openai
+pandas
+numpy
+requests
+rank-bm25
+arxiv

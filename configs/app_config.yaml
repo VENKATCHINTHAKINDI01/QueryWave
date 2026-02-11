@@ -1,0 +1,7 @@
+app:
+  name: QueryWave
+  environment: development
+  debug: true
+
+logging:
+  level: INFO

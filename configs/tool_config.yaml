@@ -1,0 +1,12 @@
+tools:
+  web_search:
+    enabled: true
+    timeout: 10
+
+  arxiv:
+    enabled: true
+    max_results: 5
+
+  document_rag:
+    chunk_size: 500
+    chunk_overlap: 50
